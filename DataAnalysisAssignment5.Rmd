@@ -1,0 +1,65 @@
+---
+title: "Data Analysis Assignment 5"
+author: "Himangshu Raj Bhantana"
+date: "11/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1. Asthma Patients in California
+
+**Are the covariates in this data balanced between the two groups? If no, which covariates are not? How did you assess balance?**
+
+Covariates isn't balanced between two groups, there were 8 unbalanced covariate which can been seen below. We use the ASD (absolute standardized difference) to assess the balance, where the absolute standardized difference value is greater than 0.1.
+
+```{r, results= "asis", echo=FALSE, message=FALSE, warning=FALSE}
+library(xtable)
+library(MatchIt) #for propensity score matching
+library(cobalt)
+library(ggplot2)
+library(randomForest)
+library(dplyr)
+Asthma <- read.csv("~/Downloads/Asthma.txt", sep="")
+#str(Asthma)
+#head(Asthma)
+#dim(Asthma)
+#summary(Asthma)
+
+
+Asthma$i_race<- factor(Asthma$i_race)
+Asthma$i_educ<- factor(Asthma$i_educ)
+Asthma$i_insu<- factor(Asthma$i_insu)
+Asthma$i_drug<- factor(Asthma$i_drug)
+Asthma$i_seve<- factor(Asthma$i_seve)
+
+Asthma$i_sex <- relevel(factor(Asthma$i_sex), ref = 1)
+Asthma$i_educ <- relevel(factor(Asthma$i_educ), ref = 5)
+Asthma$i_seve <- relevel(factor(Asthma$i_seve), ref = 3)
+
+Asthma$pgy<- 1
+Asthma$pgy[Asthma$pg == 2] <- 0
+asthma$pgy <- as.factor(asthma$pg)
+
+Asthma$com_t <- Asthma$com_t - mean(Asthma$com_t)
+Asthma$pcs_sd <- Asthma$pcs_sd - mean(Asthma$pcs_sd)
+Asthma$mcs_sd <- Asthma$mcs_sd - mean(Asthma$mcs_sd)
+
+bt=bal.tab(list(treat=Asthma$pgy,covs=Asthma,estimand="ATE"))
+ddg<-bt$Balance %>% filter(abs(Diff.Un) > 0.1)
+love.plot(list(treat=Asthma$pgy,covs=Asthma,estimand="ATE"),stars = "std")
+xtable(ddg, type='latex', title='Baseline Model Summary', header= FALSE, digits=2, no.space = TRUE)
+```
+## Part2 
+
+## Question 1
+**Are there any observations with an estimated propensity score e that is out of the range of e in the other group? If there are only a few such outliers (less than 5), keep them; If many, discard them and report the number of the discarded observations.**
+
+There are observations with an estimated propensity score e that is outside the range of e in the other group; there were more than 5, therefore we chose to discard them; the number of observations discarded was 48, with one group having a number of 40 and another having a number of 8.
+
+Using one-to-one, nearest neighbor matching on the estimated propensity scores, check balance again. Are the covariates balanced now? If no, which ones are not?
+
+Using one-to-one matching and balancing still gave us the covariates unbalanced 
+
